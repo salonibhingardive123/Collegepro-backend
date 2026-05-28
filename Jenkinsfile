@@ -51,20 +51,12 @@ pipeline {
     post {
         success {
             echo 'Deployment operations completed cleanly. Dispatching notification email...'
-            '''emailext (
-                subject: "SUCCESS: Jenkins Automation Pipeline [Job: ${env.JOB_NAME} Build: #${env.BUILD_NUMBER}]",
-                body: "The book review system backend code was built, validated, and deployed successfully to Azure App Service. Review execution logs here: ${env.BUILD_URL}",
-                to: "${env.ALERT_RECIPIENT}"
-            )'''
+            
         }
 
         failure {
             echo 'Exception trapped during workflow execution phase. Activating emergency alerts...'
-            '''emailext (
-                subject: "CRITICAL FAILURE: Jenkins Automation Pipeline [Job: ${env.JOB_NAME} Build: #${env.BUILD_NUMBER}]",
-                body: "A pipeline operation encountered an exit failure. Broken configurations were blocked from changing live cloud assets. Review the terminal execution logs to debug: ${env.BUILD_URL}",
-                to: "${env.ALERT_RECIPIENT}"
-            )'''
+            
         }
     }
 }
