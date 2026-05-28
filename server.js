@@ -28,12 +28,23 @@ app.get('/api/reviews', async (req, res) => {
 });
 
 // ROUTE 2: POST - Create and insert a new reader review
+// UPGRADED POST ROUTE WITH EXTENSIVE TRACKING LOGS
 app.post('/api/reviews', async (req, res) => {
-    const { title, author, rating, text } = req.body;
+    console.log("Incoming POST payload request body:", req.body);
+    
+    // Abstract inputs while accommodating alternative naming variations
+    const title = req.body.title;
+    const author = req.body.author;
+    const rating = req.body.rating;
+    const text = req.body.text || req.body.reviewText; // Fallback mapping match
 
-    // Strict validation parameters
+    // Flexible logging validation check parameters
     if (!title || !author || !rating || !text) {
-        return res.status(400).json({ error: "Missing required submission parameters." });
+        console.warn("Validation Rejected: Missing one or more payload values.", { title, author, rating, text });
+        return res.status(400).json({ 
+            error: "Missing parameters.", 
+            received: { title, author, rating, text } 
+        });
     }
 
     try {
@@ -45,10 +56,11 @@ app.post('/api/reviews', async (req, res) => {
         const values = [title, author, parseInt(rating), text];
         const result = await db.query(insertQuery, values);
         
+        console.log("Database write success! Inserted entry row data:", result.rows[0]);
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error("Error executing POST /api/reviews:", err.message);
-        res.status(500).json({ error: "Internal database insert statement breakdown" });
+        console.error("Critical insert block error execution exception:", err.message);
+        res.status(500).json({ error: "Internal database statement breakdown", details: err.message });
     }
 });
 
