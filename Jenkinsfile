@@ -34,11 +34,16 @@ pipeline {
         stage('Deploy to Azure App Service') {
             steps {
                 echo 'Authenticating pipeline secure context using Service Principal JSON Secret Text...'
-                // Pulls your stored JSON credentials block into a temporary variable called AZURE_SP_JSON
                 withCredentials([string(credentialsId: 'azure-service-principal', variable: 'AZURE_SP_JSON')]) {
                     echo 'Logging into Azure Account using automation credential token...'
-                    // Authenticates using the raw JSON block text dynamically
-                    sh "az login --sdk-auth --service-principal -u \$(echo \$AZURE_SP_JSON | jq -r .clientId) -p \$(echo \$AZURE_SP_JSON | jq -r .clientSecret) -t \$(echo \$AZURE_SP_JSON | jq -r .tenantId)"
+                    // Uses clean standard keys compatible with all modern Azure CLI versions
+                    sh """
+                        CLIENT_ID=\$(echo \$AZURE_SP_JSON | jq -r .clientId)
+                        CLIENT_SECRET=\$(echo \$AZURE_SP_JSON | jq -r .clientSecret)
+                        TENANT_ID=\$(echo \$AZURE_SP_JSON | jq -r .tenantId)
+                        
+                        az login --service-principal -u \$CLIENT_ID -p \$CLIENT_SECRET -t \$TENANT_ID
+                    """
                     
                     echo 'Publishing verified zip package directly to production app container slot...'
                     sh "az account set --subscription ${AZURE_SUBSCRIPTION_ID}"
